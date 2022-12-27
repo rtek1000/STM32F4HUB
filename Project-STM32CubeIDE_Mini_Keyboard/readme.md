@@ -18,4 +18,5 @@
 - - Modification:
 - - - Added Alternative support for Mini Keyboard (built-in touchpad)
 - - - - (See https://www.amazon.com/Wireless-Keyboard-BIFANS-Portable-Touchpad/dp/B075SBX1CX)
+- - - - [image](https://raw.githubusercontent.com/rtek1000/STM32F4HUB/master/Project-STM32CubeIDE_Mini_Keyboard/Mini_Keyboard1.jpg)
 - - By: RTEK1000
