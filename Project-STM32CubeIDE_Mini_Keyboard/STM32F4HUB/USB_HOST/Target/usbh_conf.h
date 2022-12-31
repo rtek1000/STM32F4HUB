@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "log.h"
+#include "../Inc/log.h"
 
 #define USBH_MAX_NUM_ENDPOINTS                3
 #define USBH_MAX_NUM_INTERFACES               3

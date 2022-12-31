@@ -36,14 +36,14 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include <main.h>
 
 #ifdef DiscoveryBoard
 #include "stm32f4_discovery.h"
 #endif
 
 #ifdef DiyMoreBoard
-#include "../Utilities/STM32F4-Diymore/stm32f4_diymore.h"
+#include <stm32f4_diymore.h>
 #endif
 
 #ifdef __STM32F4_DIYMORE_H

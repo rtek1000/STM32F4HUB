@@ -5,7 +5,7 @@
  *      Author: mori
  */
 
-#include "log.h"
+#include "../Inc/log.h"
 
 #include <stdio.h>
 #include <string.h>

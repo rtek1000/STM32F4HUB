@@ -450,7 +450,7 @@ typedef struct
   USBH_StatusTypeDef  (*BgndProcess) (struct _USBH_HandleTypeDef *phost);
   USBH_StatusTypeDef  (*SOFProcess) (struct _USBH_HandleTypeDef *phost);  
   USBH_StatusTypeDef  (*Parameter)   (struct _USBH_HandleTypeDef *phost, uint8_t param, uint8_t *data, uint16_t *length);
-//  void*                pData;
+  void*                pData;
 } USBH_ClassTypeDef;
 
 /* USB Host handle structure */
