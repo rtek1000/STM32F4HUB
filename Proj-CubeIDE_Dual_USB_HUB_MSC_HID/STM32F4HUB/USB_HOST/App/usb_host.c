@@ -26,6 +26,7 @@
 #include <usbh_hid.h>
 #include <usbh_hub.h>
 #include <usbh_msc.h>
+#include "usbh_hid_keybd.h"
 
 #ifdef DiscoveryBoard
 #include "stm32f4_discovery.h"
@@ -49,12 +50,16 @@
 /* USER CODE END PFP */
 
 /* USB Host core handle declaration */
-USBH_HandleTypeDef hUSBHostFS[5];
-USBH_HandleTypeDef hUSBHostHS[5];
+USBH_HandleTypeDef hUSBHostFS[10];
+USBH_HandleTypeDef hUSBHostHS[10];
 ApplicationTypeDef Appli_state_FS = APPLICATION_IDLE;
 ApplicationTypeDef Appli_state_HS = APPLICATION_IDLE;
 USBH_HandleTypeDef hUSB_Host;
 //ApplicationTypeDef Appli_state_MSC = APPLICATION_IDLE;
+
+uint8_t keyboard_insert = FALSE;
+extern uint8_t kbd_LED_status[1];
+uint32_t keyboard_led_timeout = 0;
 
 /*
  * -- Insert your variables declaration here --
@@ -149,11 +154,12 @@ void userFunction(void) {
 					/* Compare read data with the expected data */
 					if ((bytesread == bytesWritten)) {
 						/*verification success full - number of written bytes is equal to number of read bytes*/
-						LOG("verification OK - read number of bytes is equal to written number of bytes \n");
+						LOG(
+								"verification OK - read number of bytes is equal to written number of bytes \n");
 
 						USBH_DeInit(&hUSB_Host);
 
-						if(hUSB_Host.id == ID_USB_HOST_FS) {
+						if (hUSB_Host.id == ID_USB_HOST_FS) {
 							USB_HOST_Init_FS();
 						} else { // if(phost->id == ID_USB_HOST_HS) {
 							USB_HOST_Init_HS();
@@ -376,6 +382,46 @@ static void hub_process(USBH_HandleTypeDef *hUSBHost) {
 			HID_KEYBD_Info_TypeDef *kinfo;
 			kinfo = USBH_HID_GetKeybdInfo(_phost);
 			if (kinfo != NULL) {
+				uint8_t key = kinfo->keys[0];
+
+				if (key == KEY_INSERT) {
+					keyboard_insert = !keyboard_insert;
+				} else {
+					if((HAL_GetTick() - keyboard_led_timeout) > 300){
+						keyboard_led_timeout = HAL_GetTick();
+
+						if (key == KEY_KEYPAD_NUM_LOCK_AND_CLEAR) {
+							if ((kbd_LED_status[0] & 1) == 0) {
+								kbd_LED_status[0] |= 0B001;
+							} else {
+								kbd_LED_status[0] &= 0B110;
+							}
+
+							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
+
+							//		USB_Set_Keyboard_LED_Status();
+						} else if (key == KEY_CAPS_LOCK) {
+							if (((kbd_LED_status[0] >> 1) & 1) == 0) {
+								kbd_LED_status[0] |= 0B010;
+							} else {
+								kbd_LED_status[0] &= 0B101;
+							}
+
+							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
+						} else if (key == KEY_SCROLL_LOCK) {
+							if (((kbd_LED_status[0] >> 2) & 1) == 0) {
+								kbd_LED_status[0] |= 0B100;
+							} else {
+								kbd_LED_status[0] &= 0B011;
+							}
+
+							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
+						}
+					} else {
+						// keyboardMain(keybd_info1);
+					}
+				}
+
 				USBH_DbgLog("KEYB %d", kinfo->keys[0]);
 			}
 		}

@@ -34,11 +34,14 @@
 #define USB_HUB_CLASS     					 0x09
 #define HUB_MIN_POLL	  					 200
 
+
 #define MAX_HUB_PORTS 						 4
+
 
 #define USB_DESCRIPTOR_HUB                   0x29
 #define USB_REQUEST_GET_DESCRIPTOR           0x06
 #define HUB_FEATURE_SEL_PORT_POWER           0x08
+
 
 #define USB_DEVICE_REQUEST_SET   			 0x00
 #define USB_DEVICE_REQUEST_GET   			 0x01
@@ -46,17 +49,21 @@
 #define USB_REQUEST_SET_FEATURE     		 0x03
 #define USB_REQUEST_GET_STATUS          	 0x00
 
+
 #define HUB_FEAT_SEL_PORT_CONNECTION 		 0x00
 #define HUB_FEAT_SEL_C_HUB_LOCAL_POWER       0x00
 #define HUB_FEAT_SEL_C_HUB_OVER_CURRENT      0x01
+
 
 #define HUB_FEAT_SEL_PORT_CONN         		 0x00
 #define HUB_FEAT_SEL_PORT_ENABLE             0x01
 #define HUB_FEAT_SEL_PORT_SUSPEND            0x02
 #define HUB_FEAT_SEL_PORT_OVER_CURRENT       0x03
 #define HUB_FEAT_SEL_PORT_RESET              0x04
+
 #define HUB_FEAT_SEL_PORT_POWER              0x08
 #define HUB_FEAT_SEL_PORT_LOW_SPEED          0x09
+
 #define HUB_FEAT_SEL_C_PORT_CONNECTION       0x10
 #define HUB_FEAT_SEL_C_PORT_ENABLE           0x11
 #define HUB_FEAT_SEL_C_PORT_SUSPEND          0x12

@@ -133,8 +133,8 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef *hHCD)
 *******************************************************************************/
 
 // MORI
-extern  USBH_HandleTypeDef hUSBHostFS[5];
-extern  USBH_HandleTypeDef hUSBHostHS[5];
+extern  USBH_HandleTypeDef hUSBHostFS[10];
+extern  USBH_HandleTypeDef hUSBHostHS[10];
 
  /**
   * @brief  SOF callback.
@@ -146,7 +146,7 @@ void HAL_HCD_SOF_Callback(HCD_HandleTypeDef *hHCD)
 	// No endpoint operation will be done here
 	int i;
 
-	for(i = 0; i < 5; ++i)
+	for(i = 0; i < 10; ++i)
 	{
 		if(hHCD->Instance == USB_OTG_FS){
 			if(hUSBHostFS[i].valid)

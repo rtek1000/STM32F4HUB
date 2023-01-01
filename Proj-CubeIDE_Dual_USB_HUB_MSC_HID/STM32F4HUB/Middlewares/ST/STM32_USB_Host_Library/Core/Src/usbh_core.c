@@ -29,11 +29,18 @@
 
 #include "usbh_core.h"
 
-extern USBH_HandleTypeDef hUSBHostFS[5];
-extern USBH_HandleTypeDef hUSBHostHS[5];
+#include "usbh_hid_keybd.h"
+
+extern USBH_HandleTypeDef hUSBHostFS[10];
+extern USBH_HandleTypeDef hUSBHostHS[10];
 extern HCD_HandleTypeDef _hHCD[2];
 
 extern void MX_USB_HOST_Init(void);
+
+/* Keyboard Led Status */
+extern uint32_t keyboard_led_status_tick;
+uint8_t keyboard_led_status_update = 0;
+extern uint8_t kbd_LED_status[1]; // kbd_num_lock_state = 1
 
 /** @addtogroup USBH_LIB
  * @{
@@ -477,7 +484,14 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 				phost->gState = HOST_INPUT;
 			}
 
+			if (phost->device.CfgDesc.Itf_Desc[0].bInterfaceProtocol
+						== HID_KEYBRD_BOOT_CODE) {
+
+				keyboard_led_status_update = 1;
+				USBH_UsrLog("HID_KEYBRD_BOOT_CODE");
+			}
 		}
+
 		break;
 
 	case HOST_INPUT: {
@@ -570,18 +584,26 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 	case HOST_CLASS:
 		/* process class state machine */
 		if (phost->pActiveClass != NULL) {
+			if ((HAL_GetTick() - keyboard_led_status_tick) > 10) {
+				keyboard_led_status_tick = HAL_GetTick();
+
+				if (phost->device.CfgDesc.Itf_Desc[0].bInterfaceProtocol
+						== HID_KEYBRD_BOOT_CODE) {
+					USB_Set_Keyboard_LED_Status(phost, kbd_LED_status);
+				}
+			}
+
 			phost->pActiveClass->BgndProcess(phost);
 		}
 		break;
 
 	case HOST_DEV_DISCONNECTED:
-
 		USBH_UsrLog("HOST_DEV_DISCONNECTED %d", phost->address);
 
 		// MORI - Hub disconnecting, remove all plugged devices
 		{
 			int i;
-			for (i = 1; i < 5; ++i) {
+			for (i = 1; i < 10; ++i) {
 				if (phost->id == ID_USB_HOST_FS) {
 					if (hUSBHostFS[i].valid) {
 						if (hUSBHostFS[i].pActiveClass != NULL) {
@@ -602,8 +624,6 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 						memset(&hUSBHostHS[i], 0, sizeof(USBH_HandleTypeDef));
 					}
 				}
-
-
 			}
 		}
 
@@ -835,7 +855,7 @@ USBH_StatusTypeDef USBH_LL_Disconnect(USBH_HandleTypeDef *phost) {
 
 	// MORI - Always select the root device, mainly if its a hub
 	USBH_HandleTypeDef *pphost;
-	if(phost->id == ID_USB_HOST_FS) {
+	if (phost->id == ID_USB_HOST_FS) {
 		pphost = &hUSBHostFS[0];
 	} else { // if(phost->id == ID_USB_HOST_HS) {
 		pphost = &hUSBHostHS[0];

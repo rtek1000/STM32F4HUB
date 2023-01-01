@@ -32,8 +32,8 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_hcd.h"
 
-extern USBH_HandleTypeDef hUSBHostFS[5];
-extern USBH_HandleTypeDef hUSBHostHS[5];
+extern USBH_HandleTypeDef hUSBHostFS[10];
+extern USBH_HandleTypeDef hUSBHostHS[10];
 extern HCD_HandleTypeDef _hHCD[2];
 
 static USBH_StatusTypeDef get_hub_descriptor(USBH_HandleTypeDef *phost);
@@ -87,9 +87,9 @@ static USBH_StatusTypeDef USBH_HUB_InterfaceInit(USBH_HandleTypeDef *phost) {
 	HUB_ChangeInfo = 0;
 	HUB_CurPort = 0;
 
-	int h = 1;
-	for (; h < 5; ++h) {
-		if(phost->id == ID_USB_HOST_FS) {
+
+	for (int h = 1; h < 10; ++h) {
+		if (phost->id == ID_USB_HOST_FS) {
 			memset(&hUSBHostFS[h], 0, sizeof(USBH_HandleTypeDef));
 		} else { // if(phost->id == ID_USB_HOST_HS) {
 			memset(&hUSBHostHS[h], 0, sizeof(USBH_HandleTypeDef));
@@ -228,13 +228,24 @@ static USBH_StatusTypeDef USBH_HUB_Process(USBH_HandleTypeDef *phost) {
 		break;
 
 	case HUB_GET_DATA:
-		if(phost->id == ID_USB_HOST_FS) {
-			if (hUSBHostFS[1].busy)
-						break;
-		} else { // if(phost->id == ID_USB_HOST_HS) {
-			if (hUSBHostHS[1].busy)
-						break;
+
+		for (int h = 1; h < 10; ++h) {
+			if (phost->id == ID_USB_HOST_FS) {
+				if (hUSBHostFS[h].busy)
+					break;
+			} else { // if(phost->id == ID_USB_HOST_HS) {
+				if (hUSBHostHS[h].busy)
+					break;
+			}
 		}
+
+//		if(phost->id == ID_USB_HOST_FS) {
+//			if (hUSBHostFS[1].busy)
+//						break;
+//		} else { // if(phost->id == ID_USB_HOST_HS) {
+//			if (hUSBHostHS[1].busy)
+//						break;
+//		}
 
 		USBH_InterruptReceiveData(phost, HUB_Handle->buffer, HUB_Handle->length,
 				HUB_Handle->InPipe);
@@ -284,7 +295,7 @@ static USBH_StatusTypeDef USBH_HUB_Process(USBH_HandleTypeDef *phost) {
 
 		// uses EP0
 		if (get_hub_request(phost, USB_REQUEST_GET_STATUS,
-				HUB_FEAT_SEL_PORT_CONN, HUB_CurPort, HUB_Handle->buffer,
+		HUB_FEAT_SEL_PORT_CONN, HUB_CurPort, HUB_Handle->buffer,
 				sizeof(USB_HUB_PORT_STATUS)) == USBH_OK) {
 			HUB_ChangeInfo = (USB_HUB_PORT_STATUS*) HUB_Handle->buffer;
 
@@ -444,7 +455,8 @@ static USBH_StatusTypeDef get_hub_descriptor(USBH_HandleTypeDef *phost) {
 		USB_HUB_DESCRIPTOR *HUB_Desc = (USB_HUB_DESCRIPTOR*) HUB_Handle->buffer;
 		HUB_NumPorts =
 				(HUB_Desc->bNbrPorts > MAX_HUB_PORTS) ?
-						MAX_HUB_PORTS : HUB_Desc->bNbrPorts;
+				MAX_HUB_PORTS :
+														HUB_Desc->bNbrPorts;
 		HUB_PwrGood = (HUB_Desc->bPwrOn2PwrGood * 2);
 		state = 0;
 		status = USBH_OK;
@@ -480,7 +492,7 @@ static USBH_StatusTypeDef hub_request(USBH_HandleTypeDef *phost,
 static USBH_StatusTypeDef set_hub_port_power(USBH_HandleTypeDef *phost,
 		uint8_t hub_port) {
 	return hub_request(phost, USB_REQ_SET_FEATURE, HUB_FEATURE_SEL_PORT_POWER,
-			USB_DEVICE_REQUEST_SET, hub_port, 0, 0);
+	USB_DEVICE_REQUEST_SET, hub_port, 0, 0);
 }
 
 static USBH_StatusTypeDef get_hub_request(USBH_HandleTypeDef *phost,
@@ -564,7 +576,7 @@ static uint8_t port_changed(uint8_t *b) {
 void detach(USBH_HandleTypeDef *_phost, uint16_t idx) {
 	USBH_HandleTypeDef *pphost; // = &hUSBHost[idx];
 
-	if(_phost->id == ID_USB_HOST_FS) {
+	if (_phost->id == ID_USB_HOST_FS) {
 		pphost = &hUSBHostFS[idx];
 	} else { // if(phost->id == ID_USB_HOST_HS) {
 		pphost = &hUSBHostHS[idx];
@@ -605,7 +617,7 @@ void detach(USBH_HandleTypeDef *_phost, uint16_t idx) {
 static void attach(USBH_HandleTypeDef *phost, uint16_t idx, uint8_t lowspeed) {
 	USBH_HandleTypeDef *pphost; // = &hUSBHost[idx];
 
-	if(phost->id == ID_USB_HOST_FS) {
+	if (phost->id == ID_USB_HOST_FS) {
 		pphost = &hUSBHostFS[idx];
 	} else { // if(phost->id == ID_USB_HOST_HS) {
 		pphost = &hUSBHostHS[idx];
