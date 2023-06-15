@@ -111,3 +111,12 @@ data: 788529154
 Btn 000 00000 000 000; X 0; Y 0
 ```
 
+-------
+
+This other project might help in the struggle to get the USB Host of the STM32 working, a DIY analyzer made with the RP2040 board (Raspberry Pi Pico):
+
+>Usb Sniffer Lite for RP2040
+>This is a simple USB sniffer based on a Raspberry Pi RP2040. It supports Low Speed and Full Speed modes.
+>The firmware presents itself as a virtual COM-port (VCP), so no additional software is necessary and it is compatible with all operating systems.
+
+https://github.com/ataradov/usb-sniffer-lite
