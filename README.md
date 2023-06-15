@@ -2,6 +2,8 @@
 
 - Support to all hid interfaces.
 
+Note: Original description at the bottom of this page
+
 ----
 
 - Date: Dez, 26, 2022
