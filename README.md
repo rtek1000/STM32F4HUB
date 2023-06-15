@@ -120,5 +120,6 @@ Btn 000 00000 000 000; X 0; Y 0
 - - - - STM32CubeIDE version: 1.12.1 (Current version)
 - - - Adaptation to recognize more HID interfaces
 - - - - Folder: Project-STM32CubeIDE_USBH_HID
+- - - Ref.: [BTstack Port for STM32 USB](https://bluekitchen-gmbh.com/btstack-stm32-usb-port/)
 - - By: RTEK1000
 
