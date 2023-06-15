@@ -24,7 +24,7 @@ It's ready to run on a STM32F4DISCOVERY development board. You just need a Micro
 - - - Added Alternative support for Mini Keyboard (built-in touchpad)
 - - - - Note: The HID class must support multiple interfaces for this keyboard to work.
 - - - - (See https://www.amazon.com/Wireless-Keyboard-BIFANS-Portable-Touchpad/dp/B075SBX1CX)
-- - - - ![image](https://raw.githubusercontent.com/rtek1000/STM32F4HUB/master/Project-STM32CubeIDE_Mini_Keyboard/Mini_Keyboard1.jpg)
+- - - - Click to open: [Mini_Keyboard1.jpg](https://raw.githubusercontent.com/rtek1000/STM32F4HUB/master/Project-STM32CubeIDE_Mini_Keyboard/Mini_Keyboard1.jpg)
 - - By: RTEK1000
 -
 - Date: Dez, 31, 2022
