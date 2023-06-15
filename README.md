@@ -1,5 +1,9 @@
 # STM32F4HUB
 
+- Support to all hid interfaces.
+
+----
+
 - Date: Dez, 26, 2022
 - - Modification:
 - - - Converted from 'System Workbench for STM32' to 'STM32CubeIDE v1.11.0'
