@@ -22,7 +22,8 @@ It's ready to run on a STM32F4DISCOVERY development board. You just need a Micro
 - Date: Dez, 27, 2022
 - - Modification:
 - - - Added Alternative support for Mini Keyboard (built-in touchpad)
-- - - - Note: It is not necessary for the USB Host library to have HUB support. HID class must support multiple interfaces.
+- - - - Note: It is not necessary for the USB Host library to have HUB support for this keyboard to work.
+- - - - The HID class must support multiple interfaces for this keyboard to work.
 - - - - (See https://www.amazon.com/Wireless-Keyboard-BIFANS-Portable-Touchpad/dp/B075SBX1CX)
 - - - - ![image](https://raw.githubusercontent.com/rtek1000/STM32F4HUB/master/Project-STM32CubeIDE_Mini_Keyboard/Mini_Keyboard1.jpg)
 - - By: RTEK1000
