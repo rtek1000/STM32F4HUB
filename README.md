@@ -3,7 +3,7 @@
 - Support to all hid interfaces ([STM32CubeIDE](https://github.com/rtek1000/STM32F4HUB/blob/master/README.md#stm32cubeide-project)).
 - - To recognize the Mini Keyboard with built-in touchpad
 - - - This project can serve as a basis for other devices with multiple interfaces
-- - - - To do: Check why it stopped recognizing the multimedia keyboard, but it keeps recognizing mouse
+- - - - To do: Update HID project from ASC project (it stopped recognizing the multimedia keyboard)
 
 Note: Original description at the [bottom of this page](https://github.com/rtek1000/STM32F4HUB/blob/master/README.md#stm32f4hub---original-info)
 
