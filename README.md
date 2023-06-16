@@ -111,6 +111,7 @@ data: 788529154
 Btn 000 00000 000 000; X 0; Y 0
 ```
 ## STM32CubeIDE project
+
 - Date: Jun, 15, 2023
 - - Modification:
 - - - Adaptation to recognize more HID interfaces
@@ -120,7 +121,7 @@ Btn 000 00000 000 000; X 0; Y 0
 - - - - Folder: [Project-STM32CubeIDE_USBH_HID](https://github.com/rtek1000/STM32F4HUB/tree/master/Project-STM32CubeIDE_USBH_HID)
 - - - Ref.: [BTstack Port for STM32 USB](https://bluekitchen-gmbh.com/btstack-stm32-usb-port/)
 - - By: RTEK1000
-
+-
 - Date: Jun, 16, 2023
 - - Modification:
 - - - Adaptation of [Project-STM32CubeIDE_USBH_HID](https://github.com/rtek1000/STM32F4HUB/tree/master/Project-STM32CubeIDE_USBH_HID)
