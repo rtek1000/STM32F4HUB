@@ -503,7 +503,7 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 
 				phost->resetPortPhase = 3U;
 			} else if (phost->resetPortPhase == 3U) {
-				/* RESET 31 ms */
+				/* RESET 15 ms */
 				if ((USBH_GetTick() - phost->resetPortTimer) > 15U) {
 					(void) USBH_LL_ResetPort_End(phost);
 
@@ -513,8 +513,6 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 				}
 			} else if (phost->resetPortPhase == 4U) {
 				if ((USBH_GetTick() - phost->resetPortTimer) > 10U) {
-					(void) USBH_LL_ResetPort_End(phost);
-
 					phost->resetPortPhase = 5U;
 				}
 			} else if (phost->resetPortPhase == 5U) {
