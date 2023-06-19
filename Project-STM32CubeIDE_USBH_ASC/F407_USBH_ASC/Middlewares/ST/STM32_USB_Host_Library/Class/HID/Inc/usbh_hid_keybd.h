@@ -1,21 +1,21 @@
 /**
-  ******************************************************************************
-  * @file    usbh_hid_keybd.h
-  * @author  MCD Application Team
-  * @brief   This file contains all the prototypes for the usbh_hid_keybd.c
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2015 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                      www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    usbh_hid_keybd.h
+ * @author  MCD Application Team
+ * @brief   This file contains all the prototypes for the usbh_hid_keybd.c
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2015 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                      www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
 
 /* Define to prevent recursive -----------------------------------------------*/
 #ifndef __USBH_HID_KEYBD_H
@@ -30,26 +30,25 @@ extern "C" {
 #include "usbh_hid_keybd.h"
 
 /** @addtogroup USBH_LIB
-  * @{
-  */
+ * @{
+ */
 
 /** @addtogroup USBH_CLASS
-  * @{
-  */
+ * @{
+ */
 
 /** @addtogroup USBH_HID_CLASS
-  * @{
-  */
+ * @{
+ */
 
 /** @defgroup USBH_HID_KEYBD
-  * @brief This file is the Header file for usbh_hid_keybd.c
-  * @{
-  */
-
+ * @brief This file is the Header file for usbh_hid_keybd.c
+ * @{
+ */
 
 /** @defgroup USBH_HID_KEYBD_Exported_Types
-  * @{
-  */
+ * @{
+ */
 #define KEY_NONE                               0x00
 #define KEY_ERRORROLLOVER                      0x01
 #define KEY_POSTFAIL                           0x02
@@ -270,28 +269,32 @@ extern "C" {
 #define KEY_RIGHTALT                           0xE6
 #define KEY_RIGHT_GUI                          0xE7
 
-typedef struct
-{
-  uint8_t state;
-  uint8_t lctrl;
-  uint8_t lshift;
-  uint8_t lalt;
-  uint8_t lgui;
-  uint8_t rctrl;
-  uint8_t rshift;
-  uint8_t ralt;
-  uint8_t rgui;
-  uint8_t keys[6];
-}
-HID_KEYBD_Info_TypeDef;
+typedef struct {
+	uint8_t state;
+	uint8_t lctrl;
+	uint8_t lshift;
+	uint8_t lalt;
+	uint8_t lgui;
+	uint8_t rctrl;
+	uint8_t rshift;
+	uint8_t ralt;
+	uint8_t rgui;
+	uint8_t keys[6];
+	uint8_t key_ascii;
+	uint8_t key_special;
+	uint8_t prev_led_status;
+	uint8_t led_num_lock;
+	uint8_t led_scroll_lock;
+	uint8_t led_caps_lock;
+} HID_KEYBD_Info_TypeDef;
 
 USBH_StatusTypeDef USBH_HID_KeybdInit(USBH_HandleTypeDef *phost);
-HID_KEYBD_Info_TypeDef *USBH_HID_GetKeybdInfo(USBH_HandleTypeDef *phost);
+HID_KEYBD_Info_TypeDef* USBH_HID_GetKeybdInfo(USBH_HandleTypeDef *phost);
 uint8_t USBH_HID_GetASCIICode(HID_KEYBD_Info_TypeDef *info);
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 #ifdef __cplusplus
 }
@@ -300,19 +303,19 @@ uint8_t USBH_HID_GetASCIICode(HID_KEYBD_Info_TypeDef *info);
 #endif /* __USBH_HID_KEYBD_H */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 
 /**
-  * @}
-  */
+ * @}
+ */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

@@ -402,6 +402,12 @@ typedef struct {
 	uint8_t skip_interface;
 	USBH_DevDescTypeDef DevDesc;
 	USBH_CfgDescTypeDef CfgDesc;
+	uint8_t kbd_LED_status; // kbd_num_lock_state = 1
+//	uint8_t kbd_LED_status_old;
+	uint32_t kbd_led_status_tick;
+	uint8_t kbd_LED_Num_Lock;
+	uint8_t kbd_LED_Caps_Lock;
+	uint8_t kbd_LED_Scroll_Lock;
 } USBH_DeviceTypeDef;
 
 struct _USBH_HandleTypeDef;
@@ -438,7 +444,7 @@ typedef struct _USBH_HandleTypeDef {
 
 	uint32_t resetPortTimer;
 	uint8_t resetPortPhase;
-//	uint8_t ll_resetPortPhase;
+
 #if (USBH_USE_OS == 1U)
 #if osCMSIS < 0x20000
   osMessageQId          os_event;
@@ -449,7 +455,18 @@ typedef struct _USBH_HandleTypeDef {
 #endif
   uint32_t              os_msg;
 #endif
+  // MORI
+    __IO uint8_t valid;
+    __IO uint8_t busy;
 
+  //  __IO uint8_t transfering;
+
+    uint8_t hub;
+    uint8_t address;
+
+    uint8_t prescaler;
+    uint8_t interfaces;
+    void*   USBH_ClassTypeDef_pData[USBH_MAX_NUM_INTERFACES];
 } USBH_HandleTypeDef;
 
 #if  defined ( __GNUC__ )

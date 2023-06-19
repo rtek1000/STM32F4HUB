@@ -23,3 +23,11 @@ int _write(int file, char *ptr, int len) {
 	}
 	return len;
 }
+
+int _read(int file, char * ptr, int len){
+    (void)(file);
+    (void)(ptr);
+    (void)(len);
+    return -1;
+}
+

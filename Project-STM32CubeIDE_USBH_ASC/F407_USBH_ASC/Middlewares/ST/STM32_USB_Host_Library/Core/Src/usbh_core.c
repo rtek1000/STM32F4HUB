@@ -161,7 +161,7 @@ USBH_StatusTypeDef USBH_Init(USBH_HandleTypeDef *phost,
 }
 
 /**
- * @brief  HCD_Init
+ * @brief  HCD_DeInit
  *         De-Initialize the Host portion of the driver.
  * @param  phost: Host Handle
  * @retval USBH Status
@@ -179,6 +179,8 @@ USBH_StatusTypeDef USBH_DeInit(USBH_HandleTypeDef *phost) {
 
 	if (phost->pData != NULL) {
 		(void) USBH_LL_Stop(phost);
+
+		(void) USBH_LL_DeInit(phost);
 	}
 
 #if (USBH_USE_OS == 1U)
@@ -196,6 +198,22 @@ USBH_StatusTypeDef USBH_DeInit(USBH_HandleTypeDef *phost) {
 
 #endif /* (osCMSIS < 0x20000U) */
 #endif /* (USBH_USE_OS == 1U) */
+
+#ifdef HOST_HS
+	if (phost->id == HOST_HS) {
+		// stm32f4xx_hal_rcc_ex.h
+		__HAL_RCC_USB_OTG_HS_FORCE_RESET();
+		__HAL_RCC_USB_OTG_HS_RELEASE_RESET();
+	}
+#endif
+
+#ifdef HOST_FS
+	if (phost->id == HOST_FS) {
+		// stm32f4xx_hal_rcc_ex.h
+		__HAL_RCC_USB_OTG_FS_FORCE_RESET();
+		__HAL_RCC_USB_OTG_FS_RELEASE_RESET();
+	}
+#endif
 
 	return USBH_OK;
 }
@@ -486,7 +504,7 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 				phost->resetPortPhase = 3U;
 			} else if (phost->resetPortPhase == 3U) {
 				/* RESET 31 ms */
-				if ((USBH_GetTick() - phost->resetPortTimer) > 31U) {
+				if ((USBH_GetTick() - phost->resetPortTimer) > 15U) {
 					(void) USBH_LL_ResetPort_End(phost);
 
 					phost->resetPortTimer = USBH_GetTick();
@@ -494,7 +512,7 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 					phost->resetPortPhase = 4U;
 				}
 			} else if (phost->resetPortPhase == 4U) {
-				if ((USBH_GetTick() - phost->resetPortTimer) > 1U) {
+				if ((USBH_GetTick() - phost->resetPortTimer) > 10U) {
 					(void) USBH_LL_ResetPort_End(phost);
 
 					phost->resetPortPhase = 5U;
@@ -832,6 +850,7 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 	case HOST_ABORT_STATE:
 //		if (phost->Timeout > USBH_DEV_RESET_TIMEOUT) {
 		USBH_RecoveryPhost(phost);
+		//NVIC_SystemReset();
 //		} else {
 //			phost->Timeout += 10U;
 //			USBH_Delay(10U);
@@ -844,6 +863,8 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 }
 
 void USBH_RecoveryPhost(USBH_HandleTypeDef *phost) {
+	USBH_UsrLog("Recovering USB module");
+
 	USBH_HandleTypeDef phost_bkp;
 
 	phost_bkp.id = phost->id;
@@ -995,6 +1016,7 @@ static USBH_StatusTypeDef USBH_HandleEnum(USBH_HandleTypeDef *phost) {
 				USBH_UsrLog(
 						"Control error, Device not Responding Please unplug the Device.");
 				phost->gState = HOST_ABORT_STATE;
+				Status = USBH_FAIL;
 			} else {
 				/* Free control pipes */
 				(void) USBH_FreePipe(phost, phost->Control.pipe_out);

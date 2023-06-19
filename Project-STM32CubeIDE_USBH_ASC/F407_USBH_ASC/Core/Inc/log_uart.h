@@ -18,8 +18,5 @@
                             printf("\n"); \
 } while (0)
 
-int __io_putchar(int ch);
-int _write(int file, char *ptr, int len);
-
 
 #endif /* INC_LOG_UART_H_ */

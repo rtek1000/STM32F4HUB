@@ -88,6 +88,9 @@
 /*----------   -----------*/
 #define USBH_USE_OS      0U
 
+ /*----------   -----------*/
+#define USBH_KEYBOARD_LED_NUM_LOCK_START      1U
+
 /****************************************/
 /* #define for FS and HS identification */
 #define HOST_HS 		0

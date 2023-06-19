@@ -369,10 +369,70 @@ static USBH_StatusTypeDef USBH_HID_KeybdDecode(USBH_HandleTypeDef *phost) {
 		keybd_info.rgui = (uint8_t) HID_ReadItem(
 				(HID_Report_ItemTypedef*) &imp_0_rgui, 0U);
 
+		if ((keybd_info.lctrl != 0U) || (keybd_info.lshift != 0U)
+				|| (keybd_info.lalt != 0U) || (keybd_info.lgui != 0U)
+				|| (keybd_info.rctrl != 0U) || (keybd_info.rshift != 0U)
+				|| (keybd_info.ralt != 0U) || (keybd_info.rgui != 0U)) {
+			keybd_info.key_special = 1U;
+		} else {
+			keybd_info.key_special = 0U;
+		}
+
 		for (x = 0U; x < sizeof(keybd_info.keys); x++) {
 			keybd_info.keys[x] = (uint8_t) HID_ReadItem(
 					(HID_Report_ItemTypedef*) &imp_0_key_array, x);
 		}
+
+		if (keybd_info.prev_led_status != phost->device.kbd_LED_status) {
+			keybd_info.prev_led_status = phost->device.kbd_LED_status;
+			keybd_info.led_num_lock = phost->device.kbd_LED_status & 1U;
+			keybd_info.led_caps_lock = (phost->device.kbd_LED_status >> 1U)
+					& 1U;
+			keybd_info.led_scroll_lock = (phost->device.kbd_LED_status >> 2U)
+					& 1U;
+		}
+
+		if (keybd_info.keys[0] == KEY_KEYPAD_NUM_LOCK_AND_CLEAR) {
+			if (keybd_info.led_num_lock != 0U) {
+				keybd_info.led_num_lock = 0U;
+			} else {
+				keybd_info.led_num_lock = 1U;
+			}
+		} else if (keybd_info.keys[0] == KEY_CAPS_LOCK) {
+			if (keybd_info.led_caps_lock != 0U) {
+				keybd_info.led_caps_lock = 0U;
+			} else {
+				keybd_info.led_caps_lock = 1U;
+			}
+		} else if (keybd_info.keys[0] == KEY_SCROLL_LOCK) {
+			if (keybd_info.led_scroll_lock != 0U) {
+				keybd_info.led_scroll_lock = 0U;
+			} else {
+				keybd_info.led_scroll_lock = 1U;
+			}
+		}
+
+		if (keybd_info.led_num_lock != 0U) {
+			phost->device.kbd_LED_status |= 0b001U;
+		} else {
+			phost->device.kbd_LED_status &= ~0b001U;
+		}
+
+		if (keybd_info.led_caps_lock != 0U) {
+			phost->device.kbd_LED_status |= 0b010U;
+		} else {
+			phost->device.kbd_LED_status &= ~0b010U;
+		}
+
+		if (keybd_info.led_scroll_lock != 0U) {
+			phost->device.kbd_LED_status |= 0b100U;
+		} else {
+			phost->device.kbd_LED_status &= ~0b100U;
+		}
+
+		keybd_info.prev_led_status = phost->device.kbd_LED_status;
+
+		keybd_info.key_ascii = USBH_HID_GetASCIICode(&keybd_info);
 
 		return USBH_OK;
 	}
@@ -387,12 +447,19 @@ static USBH_StatusTypeDef USBH_HID_KeybdDecode(USBH_HandleTypeDef *phost) {
  * @retval ASCII code
  */
 uint8_t USBH_HID_GetASCIICode(HID_KEYBD_Info_TypeDef *info) {
-	uint8_t output;
-	if ((info->lshift != 0U) || (info->rshift != 0U)) {
-		output = HID_KEYBRD_ShiftKey[HID_KEYBRD_Codes[info->keys[0]]];
-	} else {
-		output = HID_KEYBRD_Key[HID_KEYBRD_Codes[info->keys[0]]];
+	uint8_t output = 0;
+
+	if (!((keybd_info.led_num_lock == 0U) && (info->keys[0] >= KEY_KEYPAD_1_END)
+			&& (info->keys[0] <= KEY_KEYPAD_0_INSERT))) {
+		if (((info->lshift != 0U) || (info->rshift != 0U)
+				|| ((keybd_info.led_caps_lock != 0U) && (info->keys[0] >= KEY_A)
+						&& (info->keys[0] <= KEY_Z)))) {
+			output = HID_KEYBRD_ShiftKey[HID_KEYBRD_Codes[info->keys[0]]];
+		} else {
+			output = HID_KEYBRD_Key[HID_KEYBRD_Codes[info->keys[0]]];
+		}
 	}
+
 	return output;
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

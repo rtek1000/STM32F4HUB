@@ -193,7 +193,7 @@ static USBH_StatusTypeDef USBH_CDC_InterfaceInit(USBH_HandleTypeDef *phost) {
 	(void) USBH_LL_SetToggle(phost, CDC_Handle->CommItf.NotifPipe, 0U);
 
 	interface = USBH_FindInterface(phost, DATA_INTERFACE_CLASS_CODE,
-	RESERVED, NO_CLASS_SPECIFIC_PROTOCOL_CODE);
+	CDC_RESERVED, NO_CLASS_SPECIFIC_PROTOCOL_CODE);
 
 	if ((interface == 0xFFU) || (interface >= USBH_MAX_NUM_INTERFACES)) /* No Valid Interface */
 	{

@@ -47,6 +47,7 @@ void MX_DriverVbusFS(uint8_t state)
     data = GPIO_PIN_SET;
   }
   /* USER CODE END PREPARE_GPIO_DATA_VBUS_FS */
-  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,(GPIO_PinState)data);
+  //HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,(GPIO_PinState)data);
+  HAL_GPIO_WritePin(GPIOE,GPIO_PIN_0,!(GPIO_PinState)data);
 }
 
