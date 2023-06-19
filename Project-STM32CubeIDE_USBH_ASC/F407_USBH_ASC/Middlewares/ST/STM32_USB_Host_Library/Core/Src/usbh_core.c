@@ -848,13 +848,9 @@ USBH_StatusTypeDef USBH_Process(USBH_HandleTypeDef *phost) {
 		break;
 
 	case HOST_ABORT_STATE:
-//		if (phost->Timeout > USBH_DEV_RESET_TIMEOUT) {
 		USBH_RecoveryPhost(phost);
-		//NVIC_SystemReset();
-//		} else {
-//			phost->Timeout += 10U;
-//			USBH_Delay(10U);
-//		}
+
+		break;
 
 	default:
 		break;
