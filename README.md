@@ -133,7 +133,7 @@ Btn 000 00000 000 000; X 0; Y 0
 - - - - - Mini Wireless Keyboard Built-in Touchpad  (VID: 0x0513, PID: 0x0318) supported, multimedia buttons and touchpad supported
 - - - - - Regular keyboard multimedia interface was not implemented, only the keyboard part works
 - - - - Keyboard LED control supported
-- - - - Mouse Logitech M220 and M185 (VID: 0x046D, PID: 0xC534) supported
+- - - - Wireless Mouse Logitech M220 (and M185) (VID: 0x046D, PID: 0xC534) supported
 - - - - Does not have the HUB class
 - - - - Folder: [Project-STM32CubeIDE_USBH_ASC](https://github.com/rtek1000/STM32F4HUB/tree/master/Project-STM32CubeIDE_USBH_ASC)
 - - By: RTEK1000
