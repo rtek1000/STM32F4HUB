@@ -30,11 +30,13 @@
 #include "usbh_hub.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "usbh_hid_parser.h"
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+HID_MOUSE_Info_TypeDef *mouse_info_local;
+
 // M.W.K.B.T.: Mini Wireless Keyboard with Built-in Touchpad
 typedef enum {
 	CODE_BTN_NEXT = 0x00B5,
@@ -69,9 +71,11 @@ typedef enum {
 typedef struct _HID_Multimedia_Touchpad {
 	uint8_t x;
 	uint8_t y;
+	uint8_t scroll;
+	uint8_t valid;
 	uint8_t buttons[3];
 	uint8_t multimedia;
-	uint8_t valid;
+//	uint8_t valid;
 } HID_Multimedia_Touchpad_TypeDef;
 
 HID_Multimedia_Touchpad_TypeDef info_decoded;
@@ -106,23 +110,26 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
  */
 /* USER CODE BEGIN 1 */
 // Mini Wireless Keyboard with built-in Touchpad decode:
-HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
+static HID_Multimedia_Touchpad_TypeDef* USBH_HID_Decode_Mini_Keyboard_Touchpad(
 		HID_MOUSE_Info_TypeDef *Minfo) {
+	info_decoded.multimedia = MWKBT_EMPTY;
 	info_decoded.valid = MWKBT_EMPTY;
-	info_decoded.multimedia = 0;
 
 	info_decoded.buttons[0] = 0;
 	info_decoded.buttons[1] = 0;
 	info_decoded.buttons[2] = 0;
 
-	uint8_t raw_length = Minfo->raw_length;
-	uint8_t raw_data0 = Minfo->raw_data32[1] >> 16;
+//	USBH_UsrLog("raw_data32[0]: 0x%08lx", Minfo->raw_data32[0]);
+//	USBH_UsrLog("raw_data32[1]: 0x%08lx", Minfo->raw_data32[1]);
+//	USBH_UsrLog("raw_length: 0x%02x", Minfo->raw_length);
 
-	if ((raw_length == 8) && (raw_data0 == 0x08)) {
+	uint32_t raw_data32_1 = Minfo->raw_data32[1] & 0xFFFFFF00;
+
+//	USBH_UsrLog("raw_data32_1: 0x%08lX", raw_data32_1);
+
+	if ((Minfo->raw_length == 8) && (raw_data32_1 == 0x00080000)) {
 		if ((((Minfo->raw_data32[0] >> 1) & 1) == 0)
 				&& ((Minfo->raw_data32[0] & 1) == 1)) {
-
-//			printf("Mouse functions\n");
 
 			uint8_t btn0 = (Minfo->raw_data32[0] >> 8) & 1;
 			uint8_t btn1 = (Minfo->raw_data32[0] >> 9) & 1;
@@ -151,11 +158,11 @@ HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
 		} else if ((((Minfo->raw_data32[0] >> 1) & 1) == 1)
 				&& ((Minfo->raw_data32[0] & 1) == 0)) {
 
-//			printf("Multimedia functions\n");
+			//			printf("Multimedia functions\n");
 
 			uint16_t val1 = (Minfo->raw_data32[0] >> 8) & 0xFFFF;
 
-//			printf("val1: 0x%04X\n", val1);
+			//			printf("val1: 0x%04X\n", val1);
 
 			switch (val1) {
 			case CODE_BTN_NEXT:
@@ -192,7 +199,7 @@ HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
 				info_decoded.multimedia = MWKBT_HOME;
 				break;
 			default:
-
+				info_decoded.multimedia = MWKBT_EMPTY;
 				break;
 			}
 
@@ -200,9 +207,55 @@ HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
 				info_decoded.valid = MWKBT_VALID;
 			}
 		}
+
+		info_decoded.scroll = Minfo->raw_data32[1] & 0xFF; // 8 bits
+
+		if ((info_decoded.scroll & 1) == 1) {
+			info_decoded.valid = MWKBT_VALID;
+		}
 	}
 
 	return &info_decoded;
+}
+
+static void USBH_HID_MouseLogiDecode(HID_MOUSE_Info_TypeDef *Minfo) {
+	if (Minfo->raw_length == 0x08) { // length_array: 8
+		mouse_info_local->valid = MOUSE_EMPTY;
+
+		/*Decode report */
+		uint8_t x_val = (mouse_info_local->raw_data32[0] >> 24) & 0xFF;
+		x_val |= (mouse_info_local->raw_data32[1] & 0xF) << 8;
+
+		uint8_t y_val = (mouse_info_local->raw_data32[1] >> 4) & 0xFFF;
+
+		if ((x_val > 0) || (y_val > 0)) {
+			mouse_info_local->x = x_val;
+			mouse_info_local->y = y_val;
+		}
+
+		uint8_t scroll_val = 0;
+
+		if (((mouse_info_local->raw_data32[1] >> 16) & 1) == 1) {
+			scroll_val = (mouse_info_local->raw_data32[1] >> 16) & 0xFF; // 8 bits
+		} else {
+			scroll_val = 0;
+		}
+
+		mouse_info_local->scroll = scroll_val;
+
+		uint8_t btn0 = (mouse_info_local->raw_data32[0] >> 8) & 0b1;
+		uint8_t btn1 = (mouse_info_local->raw_data32[0] >> 9) & 0b1;
+		uint8_t btn2 = (mouse_info_local->raw_data32[0] >> 10) & 0b1;
+
+		mouse_info_local->buttons[0] = btn0;
+		mouse_info_local->buttons[1] = btn1;
+		mouse_info_local->buttons[2] = btn2;
+
+		if ((btn0 != 0) || (btn1 != 0) || (btn2 != 0) || (x_val > 0)
+				|| (y_val > 0) || ((scroll_val & 1) == 1)) {
+			mouse_info_local->valid = MOUSE_VALID;
+		}
+	}
 }
 
 void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
@@ -307,7 +360,7 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 							keybd_info1->key_ascii, keybd_info1->keys[0]);
 				} else {
 					USBH_UsrLog(
-							"KB action: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
+							"KB action: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
 							keybd_info1->keys[0], keybd_info1->keys[1],
 							keybd_info1->keys[2], keybd_info1->keys[3],
 							keybd_info1->keys[4], keybd_info1->keys[5]); // USBH_DbgLog
@@ -324,75 +377,104 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 					keybd_info1->state);
 		}
 	} else if (HID_Handle->Init == USBH_HID_MouseInit) {
-		HID_MOUSE_Info_TypeDef *mouse_info;
+		mouse_info_local = USBH_HID_GetMouseInfo(phost);
 
-		mouse_info = USBH_HID_GetMouseInfo(phost);
+		uint16_t VID_info = phost->device.DevDesc.idVendor;
+		uint16_t PID_info = phost->device.DevDesc.idProduct;
 
-		if (mouse_info->raw_length == 0x08) { // mini wireless keyboard
+		USBH_UsrLog("VID: 0x%04x, PID: 0x%04x", VID_info, PID_info);
+
+		// Mini Wireless Keyboard
+		const uint16_t VID_MWKBT = 0x0513;
+		const uint16_t PID_MWKBT = 0x0318;
+
+		// Wireless Logitech M220
+		const uint16_t VID_WLogiM220 = 0x046D;
+		const uint16_t PID_WLogiM220 = 0xC534;
+
+		if ((VID_info == VID_MWKBT) && (PID_info == PID_MWKBT)) {
+			USBH_UsrLog("Mini Wireless Keyboard");
+
 			HID_Multimedia_Touchpad_TypeDef *mini_kb_touchpad;
 
-			mini_kb_touchpad = HID_Decode_Mini_Keyboard_Touchpad(mouse_info);
+			mini_kb_touchpad = USBH_HID_Decode_Mini_Keyboard_Touchpad(
+					mouse_info_local);
 
-			if (mini_kb_touchpad->valid == MWKBT_VALID) {
-				if (mini_kb_touchpad->multimedia != MWKBT_EMPTY) {
-					switch (mini_kb_touchpad->multimedia) {
-					case MWKBT_NEXT:
-						USBH_UsrLog("Next");
-						break;
-					case MWKBT_PREV:
-						USBH_UsrLog("Previous");
-						break;
-					case MWKBT_PLAY_PAUSE:
-						USBH_UsrLog("Play/Pause");
-						break;
-					case MWKBT_MUTE:
-						USBH_UsrLog("Mute");
-						break;
-					case MWKBT_VOL_UP:
-						USBH_UsrLog("Volume Up");
-						break;
-					case MWKBT_VOL_DOWN:
-						USBH_UsrLog("Volume Down");
-						break;
-					case MWKBT_MEDIA_PLAYER:
-						USBH_UsrLog("Media Player");
-						break;
-					case MWKBT_EMAIL:
-						USBH_UsrLog("e-mail");
-						break;
-					case MWKBT_BROWSER:
-						USBH_UsrLog("Browser");
-						break;
-					case MWKBT_SEARCH:
-						USBH_UsrLog("Search");
-						break;
-					case MWKBT_HOME:
-						USBH_UsrLog("Home");
-						break;
-					default:
+			if (mini_kb_touchpad->multimedia != MWKBT_EMPTY) {
+				switch (mini_kb_touchpad->multimedia) {
+				case MWKBT_NEXT:
+					USBH_UsrLog("Next");
+					break;
+				case MWKBT_PREV:
+					USBH_UsrLog("Previous");
+					break;
+				case MWKBT_PLAY_PAUSE:
+					USBH_UsrLog("Play/Pause");
+					break;
+				case MWKBT_MUTE:
+					USBH_UsrLog("Mute");
+					break;
+				case MWKBT_VOL_UP:
+					USBH_UsrLog("Volume Up");
+					break;
+				case MWKBT_VOL_DOWN:
+					USBH_UsrLog("Volume Down");
+					break;
+				case MWKBT_MEDIA_PLAYER:
+					USBH_UsrLog("Media Player");
+					break;
+				case MWKBT_EMAIL:
+					USBH_UsrLog("e-mail");
+					break;
+				case MWKBT_BROWSER:
+					USBH_UsrLog("Browser");
+					break;
+				case MWKBT_SEARCH:
+					USBH_UsrLog("Search");
+					break;
+				case MWKBT_HOME:
+					USBH_UsrLog("Home");
+					break;
+				default:
 
-						break;
-					}
-				} else {
-					if (mini_kb_touchpad->valid == MWKBT_VALID) {
-						USBH_UsrLog(
-								"Mini KB Touchpad action: x=  0x%x, y=  0x%x, button1= 0x%x, button2= 0x%x, button3= 0x%x",
-								mini_kb_touchpad->x, mini_kb_touchpad->y,
-								mini_kb_touchpad->buttons[0],
-								mini_kb_touchpad->buttons[1],
-								mini_kb_touchpad->buttons[2]);
-					}
+					break;
 				}
+			} else {
+				if (info_decoded.valid == MWKBT_VALID) {
+					USBH_UsrLog(
+							"Mini KB Touchpad action: x=  0x%02X, y=  0x%02X, scroll=  0x%02X, button1= 0x%x, button2= 0x%x, button3= 0x%x",
+							mini_kb_touchpad->x, mini_kb_touchpad->y,
+							mini_kb_touchpad->scroll,
+							mini_kb_touchpad->buttons[0],
+							mini_kb_touchpad->buttons[1],
+							mini_kb_touchpad->buttons[2]);
+				}
+			}
+		} else if ((VID_info == VID_WLogiM220) && (PID_info == PID_WLogiM220)) {
+			USBH_UsrLog("(Wireless) Logitech Mouse");
+
+			USBH_HID_MouseLogiDecode(mouse_info_local);
+
+			if (mouse_info_local->valid == MOUSE_VALID) {
+				USBH_UsrLog(
+						"Logitech Mouse action: x=  0x%03X, y=  0x%03X, scroll=  0x%02X, button1= 0x%x, button2= 0x%x, button3= 0x%x",
+						mouse_info_local->x, mouse_info_local->y,
+						mouse_info_local->scroll, mouse_info_local->buttons[0],
+						mouse_info_local->buttons[1],
+						mouse_info_local->buttons[2]);
 			}
 		} else { // regular mouse
 			//printf("Mouse action (raw data): ");
 
 			//print_raw_info(mouse_info);
-
-			USBH_UsrLog(
-					"Mouse action: x=  0x%x, y=  0x%x, button1= 0x%x, button2= 0x%x, button3= 0x%x",
-					mouse_info->x, mouse_info->y, mouse_info->buttons[0],
-					mouse_info->buttons[1], mouse_info->buttons[2]);
+			if (mouse_info_local->valid == MOUSE_VALID) {
+				USBH_UsrLog(
+						"Mouse action: x=  0x%02X, y=  0x%02X, scroll=  0x%02X, button1= 0x%x, button2= 0x%x, button3= 0x%x",
+						mouse_info_local->x, mouse_info_local->y,
+						mouse_info_local->scroll, mouse_info_local->buttons[0],
+						mouse_info_local->buttons[1],
+						mouse_info_local->buttons[2]);
+			}
 		}
 	}
 }
