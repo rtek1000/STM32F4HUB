@@ -130,6 +130,7 @@ Btn 000 00000 000 000; X 0; Y 0
 - - - - Added automatic recovery, "de-initialize" the USB port and "re-initialize"
 - - - - Port timeout modifications for automatic recovery
 - - - - Adaptation to recognize more HID interfaces (Mini Wireless Keyboard Built-in Touchpad supported)
+- - - - Keyboard LED control supported
 - - - - Does not have the HUB class
 - - - - Folder: [Project-STM32CubeIDE_USBH_ASC](https://github.com/rtek1000/STM32F4HUB/tree/master/Project-STM32CubeIDE_USBH_ASC)
 - - By: RTEK1000
