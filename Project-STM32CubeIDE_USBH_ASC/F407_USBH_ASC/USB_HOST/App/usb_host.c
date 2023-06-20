@@ -213,8 +213,8 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 	if (HID_Handle->Init == USBH_HID_KeybdInit) {
 		keybd_info1 = USBH_HID_GetKeybdInfo(phost);
 
-		if ((keybd_info1->key_ascii != 0U)
-				&& (keybd_info1->key_ascii != 0x0AU)) {
+		if ((keybd_info1->key_ascii != 0U) && (keybd_info1->key_ascii != 0x0AU)
+				&& (keybd_info1->keys[0] != KEY_HOME)) {
 			if (keybd_info1->keys[0] == KEY_BACKSPACE) {
 				USBH_UsrLog("ASCII: [BS]; Hex: 0x%02X; (Keycode: %02X)",
 						keybd_info1->key_ascii, keybd_info1->keys[0]);
@@ -227,9 +227,6 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 			} else if (keybd_info1->keys[0] == KEY_SPACEBAR) {
 				USBH_UsrLog("ASCII: [SPC]; Hex: 0x%02X; (Keycode: %02X)",
 						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_HOME) {
-				USBH_UsrLog("ASCII: [HOME]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
 			} else {
 				USBH_UsrLog("ASCII: [%c]; Hex: 0x%02X; (Keycode: %02X)",
 						keybd_info1->key_ascii, keybd_info1->key_ascii,
@@ -241,45 +238,80 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 				USBH_UsrLog("Key: [F%d]; Hex: 0x%02X; (Keycode: %02X)",
 						keybd_info1->keys[0] - KEY_F1, keybd_info1->key_ascii,
 						keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_CAPS_LOCK) {
-				USBH_UsrLog("Key: [CAP]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_ENTER) {
-				USBH_UsrLog("Key: [ENTER]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_PAGEUP) {
-				USBH_UsrLog("Key: [Pg Up]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_PAGEDOWN) {
-				USBH_UsrLog("Key: [Pg Dn]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_DELETE) {
-				USBH_UsrLog("Key: [DEL]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_END1) {
-				USBH_UsrLog("Key: [END]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_PRINTSCREEN) {
-				USBH_UsrLog("Key: [PS]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_UPARROW) {
-				USBH_UsrLog("Key: [Up]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_DOWNARROW) {
-				USBH_UsrLog("Key: [Dn]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_RIGHTARROW) {
-				USBH_UsrLog("Key: [Rg]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
-			} else if (keybd_info1->keys[0] == KEY_LEFTARROW) {
-				USBH_UsrLog("Key: [Lf]; Hex: 0x%02X; (Keycode: %02X)",
-						keybd_info1->key_ascii, keybd_info1->keys[0]);
 			} else {
-				USBH_UsrLog(
-						"KB action: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
-						keybd_info1->keys[0], keybd_info1->keys[1],
-						keybd_info1->keys[2], keybd_info1->keys[3],
-						keybd_info1->keys[4], keybd_info1->keys[5]); // USBH_DbgLog
+				char str1[20];
+
+				switch (keybd_info1->keys[0]) {
+				case KEY_CAPS_LOCK:
+					sprintf(str1, "Caps");
+					break;
+				case KEY_ENTER:
+				case KEY_KEYPAD_ENTER:
+					sprintf(str1, "Enter");
+					break;
+				case KEY_PAGEUP:
+				case KEY_KEYPAD_9_PAGEUP:
+					sprintf(str1, "PgUp");
+					break;
+				case KEY_PAGEDOWN:
+				case KEY_KEYPAD_3_PAGEDN:
+					sprintf(str1, "PgDn");
+					break;
+				case KEY_DELETE:
+					sprintf(str1, "Del");
+					break;
+				case KEY_END1:
+				case KEY_KEYPAD_1_END:
+					sprintf(str1, "End");
+					break;
+				case KEY_PRINTSCREEN:
+					sprintf(str1, "PS");
+					break;
+				case KEY_UPARROW:
+				case KEY_KEYPAD_8_UP_ARROW:
+					sprintf(str1, "Up");
+					break;
+				case KEY_DOWNARROW:
+				case KEY_KEYPAD_2_DOWN_ARROW:
+					sprintf(str1, "Dn");
+					break;
+				case KEY_RIGHTARROW:
+				case KEY_KEYPAD_6_RIGHT_ARROW:
+					sprintf(str1, "Rg");
+					break;
+				case KEY_LEFTARROW:
+				case KEY_KEYPAD_4_LEFT_ARROW:
+					sprintf(str1, "Lf");
+					break;
+				case KEY_HOME:
+				case KEY_KEYPAD_7_HOME:
+					sprintf(str1, "Home");
+					break;
+				case KEY_INSERT:
+				case KEY_KEYPAD_0_INSERT:
+					sprintf(str1, "Ins");
+					break;
+				case KEY_PAUSE:
+					sprintf(str1, "Pause");
+					break;
+				case KEY_KEYPAD_NUM_LOCK_AND_CLEAR:
+					sprintf(str1, "NumLk");
+					break;
+				default:
+					str1[0] = 0;
+					break;
+				}
+
+				if (str1[0] != 0) {
+					USBH_UsrLog("Key: [%s]; Hex: 0x%02X; (Keycode: %02X)", str1,
+							keybd_info1->key_ascii, keybd_info1->keys[0]);
+				} else {
+					USBH_UsrLog(
+							"KB action: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
+							keybd_info1->keys[0], keybd_info1->keys[1],
+							keybd_info1->keys[2], keybd_info1->keys[3],
+							keybd_info1->keys[4], keybd_info1->keys[5]); // USBH_DbgLog
+				}
 			}
 		}
 
