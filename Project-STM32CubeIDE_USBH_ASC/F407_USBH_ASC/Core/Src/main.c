@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "log_uart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

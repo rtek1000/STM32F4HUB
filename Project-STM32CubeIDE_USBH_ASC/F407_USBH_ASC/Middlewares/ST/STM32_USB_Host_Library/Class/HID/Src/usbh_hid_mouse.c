@@ -28,6 +28,7 @@
 #include "usbh_hid_mouse.h"
 #include "usbh_hid_parser.h"
 
+//#define print_binary_mouse_data 1 // uncomment to print
 /** @addtogroup USBH_LIB
  * @{
  */
@@ -210,6 +211,29 @@ HID_MOUSE_Info_TypeDef* USBH_HID_GetMouseInfo(USBH_HandleTypeDef *phost) {
 	}
 }
 
+#if print_binary_mouse_data == 1
+static void print_binary(void) {
+	printf("data: ");
+
+	for (int8_t k = 1; k >= 0; k--) {
+		for (int8_t i = 31; i >= 0; i--) {
+			uint8_t j = (mouse_report_data[k] >> i) & 1;
+			if (j == 1) {
+				printf("1");
+			} else {
+				printf("0");
+			}
+
+			if ((i % 8) == 0) {
+				printf(" ");
+			}
+		}
+	}
+
+	printf("\n");
+}
+#endif // #if print_binary_mouse_data == 1
+
 /**
  * @brief  USBH_HID_MouseDecode
  *         The function decode mouse data.
@@ -225,21 +249,39 @@ static USBH_StatusTypeDef USBH_HID_MouseDecode(USBH_HandleTypeDef *phost) {
 	if (HID_Handle->length_array[0] == 0U) {
 		return USBH_FAIL;
 	}
+
+#if print_binary_mouse_data == 1
+	USBH_UsrLog("length_array: %d", HID_Handle->length_array[0]);
+#endif // #if print_binary_mouse_data == 1
+
 	/*Fill report */
 	if (USBH_HID_FifoRead(&HID_Handle->fifo, &mouse_report_data,
 			HID_Handle->length_array[0]) == HID_Handle->length_array[0]) {
-		/*Decode report */
-		mouse_info.x = (uint8_t) HID_ReadItem((HID_Report_ItemTypedef*) &prop_x,
-				0U);
-		mouse_info.y = (uint8_t) HID_ReadItem((HID_Report_ItemTypedef*) &prop_y,
-				0U);
 
-		mouse_info.buttons[0] = (uint8_t) HID_ReadItem(
-				(HID_Report_ItemTypedef*) &prop_b1, 0U);
-		mouse_info.buttons[1] = (uint8_t) HID_ReadItem(
-				(HID_Report_ItemTypedef*) &prop_b2, 0U);
-		mouse_info.buttons[2] = (uint8_t) HID_ReadItem(
-				(HID_Report_ItemTypedef*) &prop_b3, 0U);
+		mouse_info.raw_length = HID_Handle->length_array[0];
+
+#if print_binary_mouse_data == 1
+		print_binary();
+#endif // #if print_binary_mouse_data == 1
+
+		for (uint8_t i = 0; i < 2; i++) {
+			mouse_info.raw_data32[i] = mouse_report_data[i];
+		}
+
+		if (HID_Handle->length_array[0] == 4) {
+			/*Decode report */
+			mouse_info.x = (uint8_t) HID_ReadItem(
+					(HID_Report_ItemTypedef*) &prop_x, 0U);
+			mouse_info.y = (uint8_t) HID_ReadItem(
+					(HID_Report_ItemTypedef*) &prop_y, 0U);
+
+			mouse_info.buttons[0] = (uint8_t) HID_ReadItem(
+					(HID_Report_ItemTypedef*) &prop_b1, 0U);
+			mouse_info.buttons[1] = (uint8_t) HID_ReadItem(
+					(HID_Report_ItemTypedef*) &prop_b2, 0U);
+			mouse_info.buttons[2] = (uint8_t) HID_ReadItem(
+					(HID_Report_ItemTypedef*) &prop_b3, 0U);
+		}
 
 		return USBH_OK;
 	}

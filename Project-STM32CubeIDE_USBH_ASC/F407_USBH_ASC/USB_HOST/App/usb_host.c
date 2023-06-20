@@ -35,12 +35,54 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+// M.W.K.B.T.: Mini Wireless Keyboard with Built-in Touchpad
+typedef enum {
+	CODE_BTN_NEXT = 0x00B5,
+	CODE_BTN_PREV = 0x00B6,
+	CODE_BTN_PLAY_PAUSE = 0x00CD,
+	CODE_BTN_MUTE = 0x00E2,
+	CODE_BTN_VOL_UP = 0x00E9,
+	CODE_BTN_VOL_DOWN = 0x00EA,
+	CODE_BTN_MEDIA_PLAYER = 0x0183,
+	CODE_BTN_EMAIL = 0x018A,
+	CODE_BTN_BROWSER = 0x0196,
+	CODE_BTN_SEARCH = 0x0221,
+	CODE_BTN_HOME = 0x0223,
+} MWKBT1_TypeTypeDef;
 
+typedef enum {
+	MWKBT_EMPTY = 0,
+	MWKBT_VALID,
+	MWKBT_NEXT,
+	MWKBT_PREV,
+	MWKBT_PLAY_PAUSE,
+	MWKBT_MUTE,
+	MWKBT_VOL_UP,
+	MWKBT_VOL_DOWN,
+	MWKBT_MEDIA_PLAYER,
+	MWKBT_EMAIL,
+	MWKBT_BROWSER,
+	MWKBT_SEARCH,
+	MWKBT_HOME,
+} MWKBT2_TypeTypeDef;
+
+typedef struct _HID_Multimedia_Touchpad {
+	uint8_t x;
+	uint8_t y;
+	uint8_t buttons[3];
+	uint8_t multimedia;
+	uint8_t valid;
+} HID_Multimedia_Touchpad_TypeDef;
+
+HID_Multimedia_Touchpad_TypeDef info_decoded;
+
+HID_KEYBD_Info_TypeDef *keybd_info1;
 /* USER CODE END PV */
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
+		HID_MOUSE_Info_TypeDef *Minfo);
 /* USER CODE END PFP */
 
 /* USB Host core handle declaration */
@@ -51,8 +93,7 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  * -- Insert your variables declaration here --
  */
 /* USER CODE BEGIN 0 */
-HID_KEYBD_Info_TypeDef *keybd_info1;
-extern HID_MOUSE_Info_TypeDef mouse_info;
+
 /* USER CODE END 0 */
 
 /*
@@ -64,6 +105,106 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
  * -- Insert your external function declaration here --
  */
 /* USER CODE BEGIN 1 */
+// Mini Wireless Keyboard with built-in Touchpad decode:
+HID_Multimedia_Touchpad_TypeDef* HID_Decode_Mini_Keyboard_Touchpad(
+		HID_MOUSE_Info_TypeDef *Minfo) {
+	info_decoded.valid = MWKBT_EMPTY;
+	info_decoded.multimedia = 0;
+
+	info_decoded.buttons[0] = 0;
+	info_decoded.buttons[1] = 0;
+	info_decoded.buttons[2] = 0;
+
+	uint8_t raw_length = Minfo->raw_length;
+	uint8_t raw_data0 = Minfo->raw_data32[1] >> 16;
+
+	if ((raw_length == 8) && (raw_data0 == 0x08)) {
+		if ((((Minfo->raw_data32[0] >> 1) & 1) == 0)
+				&& ((Minfo->raw_data32[0] & 1) == 1)) {
+
+//			printf("Mouse functions\n");
+
+			uint8_t btn0 = (Minfo->raw_data32[0] >> 8) & 1;
+			uint8_t btn1 = (Minfo->raw_data32[0] >> 9) & 1;
+
+			info_decoded.buttons[0] = btn0;
+			info_decoded.buttons[1] = btn1;
+
+			if ((info_decoded.buttons[0] == 1)
+					&& (info_decoded.buttons[1] == 1)) {
+				info_decoded.buttons[0] = 0;
+				info_decoded.buttons[1] = 0;
+				info_decoded.buttons[2] = 1;
+			}
+
+			uint8_t x_val = (Minfo->raw_data32[0] >> 16) & 0xFF;
+			uint8_t y_val = (Minfo->raw_data32[0] >> 24) & 0xFF;
+
+			if ((x_val > 0) || (y_val > 0)) {
+				info_decoded.x = x_val;
+				info_decoded.y = y_val;
+			}
+
+			if ((btn0 != 0) || (btn1 != 0) || (x_val > 0) || (y_val > 0)) {
+				info_decoded.valid = MWKBT_VALID;
+			}
+		} else if ((((Minfo->raw_data32[0] >> 1) & 1) == 1)
+				&& ((Minfo->raw_data32[0] & 1) == 0)) {
+
+//			printf("Multimedia functions\n");
+
+			uint16_t val1 = (Minfo->raw_data32[0] >> 8) & 0xFFFF;
+
+//			printf("val1: 0x%04X\n", val1);
+
+			switch (val1) {
+			case CODE_BTN_NEXT:
+				info_decoded.multimedia = MWKBT_NEXT;
+				break;
+			case CODE_BTN_PREV:
+				info_decoded.multimedia = MWKBT_PREV;
+				break;
+			case CODE_BTN_PLAY_PAUSE:
+				info_decoded.multimedia = MWKBT_PLAY_PAUSE;
+				break;
+			case CODE_BTN_MUTE:
+				info_decoded.multimedia = MWKBT_MUTE;
+				break;
+			case CODE_BTN_VOL_UP:
+				info_decoded.multimedia = MWKBT_VOL_UP;
+				break;
+			case CODE_BTN_VOL_DOWN:
+				info_decoded.multimedia = MWKBT_VOL_DOWN;
+				break;
+			case CODE_BTN_MEDIA_PLAYER:
+				info_decoded.multimedia = MWKBT_MEDIA_PLAYER;
+				break;
+			case CODE_BTN_EMAIL:
+				info_decoded.multimedia = MWKBT_EMAIL;
+				break;
+			case CODE_BTN_BROWSER:
+				info_decoded.multimedia = MWKBT_BROWSER;
+				break;
+			case CODE_BTN_SEARCH:
+				info_decoded.multimedia = MWKBT_SEARCH;
+				break;
+			case CODE_BTN_HOME:
+				info_decoded.multimedia = MWKBT_HOME;
+				break;
+			default:
+
+				break;
+			}
+
+			if (info_decoded.multimedia != MWKBT_EMPTY) {
+				info_decoded.valid = MWKBT_VALID;
+			}
+		}
+	}
+
+	return &info_decoded;
+}
+
 void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 	uint8_t idx = phost->device.current_interface;
 
@@ -72,131 +213,157 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost) {
 	if (HID_Handle->Init == USBH_HID_KeybdInit) {
 		keybd_info1 = USBH_HID_GetKeybdInfo(phost);
 
-		USBH_UsrLog("KB action: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
-				keybd_info1->keys[0], keybd_info1->keys[1],
-				keybd_info1->keys[2], keybd_info1->keys[3],
-				keybd_info1->keys[4], keybd_info1->keys[5]); // USBH_DbgLog
+		if ((keybd_info1->key_ascii != 0U)
+				&& (keybd_info1->key_ascii != 0x0AU)) {
+			if (keybd_info1->keys[0] == KEY_BACKSPACE) {
+				USBH_UsrLog("ASCII: [BS]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_ESCAPE) {
+				USBH_UsrLog("ASCII: [ESC]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_TAB) {
+				USBH_UsrLog("ASCII: [TAB]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_SPACEBAR) {
+				USBH_UsrLog("ASCII: [SPC]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_HOME) {
+				USBH_UsrLog("ASCII: [HOME]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else {
+				USBH_UsrLog("ASCII: [%c]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->key_ascii,
+						keybd_info1->keys[0]);
+			}
+		} else if (keybd_info1->keys[0] != 0) {
+			if ((keybd_info1->keys[0] >= KEY_F1)
+					&& (keybd_info1->keys[0] <= KEY_F12)) {
+				USBH_UsrLog("Key: [F%d]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->keys[0] - KEY_F1, keybd_info1->key_ascii,
+						keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_CAPS_LOCK) {
+				USBH_UsrLog("Key: [CAP]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_ENTER) {
+				USBH_UsrLog("Key: [ENTER]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_PAGEUP) {
+				USBH_UsrLog("Key: [Pg Up]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_PAGEDOWN) {
+				USBH_UsrLog("Key: [Pg Dn]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_DELETE) {
+				USBH_UsrLog("Key: [DEL]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_END1) {
+				USBH_UsrLog("Key: [END]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_PRINTSCREEN) {
+				USBH_UsrLog("Key: [PS]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_UPARROW) {
+				USBH_UsrLog("Key: [Up]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_DOWNARROW) {
+				USBH_UsrLog("Key: [Dn]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_RIGHTARROW) {
+				USBH_UsrLog("Key: [Rg]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else if (keybd_info1->keys[0] == KEY_LEFTARROW) {
+				USBH_UsrLog("Key: [Lf]; Hex: 0x%02X; (Keycode: %02X)",
+						keybd_info1->key_ascii, keybd_info1->keys[0]);
+			} else {
+				USBH_UsrLog(
+						"KB action: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
+						keybd_info1->keys[0], keybd_info1->keys[1],
+						keybd_info1->keys[2], keybd_info1->keys[3],
+						keybd_info1->keys[4], keybd_info1->keys[5]); // USBH_DbgLog
+			}
+		}
 
-//		if ((keybd_info1->key_ascii != 0U) && (keybd_info1->key_ascii != 0x0AU)) {
-//			USBH_UsrLog("ASCII: %c; Hex: 0x%02X; (Keycode: %02X)",
-//					keybd_info1->key_ascii, keybd_info1->key_ascii,
-//					keybd_info1->keys[0]);
-//		}
-//
-//		if (keybd_info1->key_special == 1U) {
-//			USBH_UsrLog(
-//					"lalt: %d, ralt: %d, lctrl: %d, rctrl: %d, lgui: %d, rgui: %d, lshift: %d, rshift: %d, state: %d",
-//					keybd_info1->lalt, keybd_info1->ralt, keybd_info1->lctrl,
-//					keybd_info1->rctrl, keybd_info1->lgui, keybd_info1->rgui,
-//					keybd_info1->lshift, keybd_info1->rshift,
-//					keybd_info1->state);
-//		}
+		if (keybd_info1->key_special == 1U) {
+			USBH_UsrLog(
+					"lalt: %d, ralt: %d, lctrl: %d, rctrl: %d, lgui: %d, rgui: %d, lshift: %d, rshift: %d, state: %d",
+					keybd_info1->lalt, keybd_info1->ralt, keybd_info1->lctrl,
+					keybd_info1->rctrl, keybd_info1->lgui, keybd_info1->rgui,
+					keybd_info1->lshift, keybd_info1->rshift,
+					keybd_info1->state);
+		}
 	} else if (HID_Handle->Init == USBH_HID_MouseInit) {
-		USBH_HID_GetMouseInfo(phost);
+		HID_MOUSE_Info_TypeDef *mouse_info;
 
-		USBH_UsrLog(
-				"Mouse action: x=  0x%x, y=  0x%x, button1= 0x%x, button2= 0x%x, button3= 0x%x",
-				mouse_info.x, mouse_info.y, mouse_info.buttons[0],
-				mouse_info.buttons[1], mouse_info.buttons[2]);
+		mouse_info = USBH_HID_GetMouseInfo(phost);
+
+		if (mouse_info->raw_length == 0x08) { // mini wireless keyboard
+			HID_Multimedia_Touchpad_TypeDef *mini_kb_touchpad;
+
+			mini_kb_touchpad = HID_Decode_Mini_Keyboard_Touchpad(mouse_info);
+
+			if (mini_kb_touchpad->valid == MWKBT_VALID) {
+				if (mini_kb_touchpad->multimedia != MWKBT_EMPTY) {
+					switch (mini_kb_touchpad->multimedia) {
+					case MWKBT_NEXT:
+						USBH_UsrLog("Next");
+						break;
+					case MWKBT_PREV:
+						USBH_UsrLog("Previous");
+						break;
+					case MWKBT_PLAY_PAUSE:
+						USBH_UsrLog("Play/Pause");
+						break;
+					case MWKBT_MUTE:
+						USBH_UsrLog("Mute");
+						break;
+					case MWKBT_VOL_UP:
+						USBH_UsrLog("Volume Up");
+						break;
+					case MWKBT_VOL_DOWN:
+						USBH_UsrLog("Volume Down");
+						break;
+					case MWKBT_MEDIA_PLAYER:
+						USBH_UsrLog("Media Player");
+						break;
+					case MWKBT_EMAIL:
+						USBH_UsrLog("e-mail");
+						break;
+					case MWKBT_BROWSER:
+						USBH_UsrLog("Browser");
+						break;
+					case MWKBT_SEARCH:
+						USBH_UsrLog("Search");
+						break;
+					case MWKBT_HOME:
+						USBH_UsrLog("Home");
+						break;
+					default:
+
+						break;
+					}
+				} else {
+					if (mini_kb_touchpad->valid == MWKBT_VALID) {
+						USBH_UsrLog(
+								"Mini KB Touchpad action: x=  0x%x, y=  0x%x, button1= 0x%x, button2= 0x%x, button3= 0x%x",
+								mini_kb_touchpad->x, mini_kb_touchpad->y,
+								mini_kb_touchpad->buttons[0],
+								mini_kb_touchpad->buttons[1],
+								mini_kb_touchpad->buttons[2]);
+					}
+				}
+			}
+		} else { // regular mouse
+			//printf("Mouse action (raw data): ");
+
+			//print_raw_info(mouse_info);
+
+			USBH_UsrLog(
+					"Mouse action: x=  0x%x, y=  0x%x, button1= 0x%x, button2= 0x%x, button3= 0x%x",
+					mouse_info->x, mouse_info->y, mouse_info->buttons[0],
+					mouse_info->buttons[1], mouse_info->buttons[2]);
+		}
 	}
 }
-
-//static USBH_HandleTypeDef *_phost = 0;
-//
-//static void hub_process(USBH_HandleTypeDef *hUSBHost) {
-//	static uint8_t current_loop = -1;
-//
-//	if (hUSBHost != NULL && hUSBHost->valid == 1) {
-//		//USBH_DbgLog("USBH_Process");
-//		hUSBHost->id = hUSBHost->id;
-//		USBH_Process(hUSBHost);
-//
-//		if (hUSBHost->busy)
-//			return;
-//	}
-//
-//	while (1) {
-//		current_loop++;
-//
-//		if (current_loop > MAX_HUB_PORTS) {
-//			current_loop = 0;
-//		}
-//
-//		if (hUSBHost[current_loop].valid) {
-//			_phost = &hUSBHost[current_loop];
-//			//USBH_DbgLog("USBH_LL_SetupEP0");
-//			USBH_LL_SetupEP0(_phost);
-//
-//			if (_phost->valid == 3) {
-//				USBH_DbgLog("PROCESSING ATTACH %d", _phost->address);
-//				_phost->valid = 1;
-//				_phost->busy = 1;
-//			}
-//
-//			break;
-//		}
-//	}
-//
-//	if (_phost != NULL && _phost->valid) {
-//		HID_MOUSE_Info_TypeDef *minfo;
-//		minfo = USBH_HID_GetMouseInfo(_phost);
-//
-//		if (minfo != NULL) {
-//			USBH_DbgLog("Btn %d%d%d %d%d%d%d%d %d%d%d %d%d%d; X %d; Y %d",
-//					minfo->buttons[0], minfo->buttons[1], minfo->buttons[2],
-//					minfo->buttons[3], minfo->buttons[4], minfo->buttons[5],
-//					minfo->buttons[6], minfo->buttons[7], minfo->buttons[8],
-//					minfo->buttons[9], minfo->buttons[10], minfo->buttons[11],
-//					minfo->buttons[12], minfo->buttons[13], minfo->x, minfo->y);
-//		} else {
-//			HID_KEYBD_Info_TypeDef *kinfo;
-//			kinfo = USBH_HID_GetKeybdInfo(_phost);
-//			if (kinfo != NULL) {
-//				uint8_t key = kinfo->keys[0];
-//
-//				if (key == KEY_INSERT) {
-//					keyboard_insert = !keyboard_insert;
-//				} else {
-//					//if((HAL_GetTick() - keyboard_led_timeout) > 300){
-//						keyboard_led_timeout = HAL_GetTick();
-//
-//						if (key == KEY_KEYPAD_NUM_LOCK_AND_CLEAR) {
-//							if ((kbd_LED_status[0] & 1) == 0) {
-//								kbd_LED_status[0] |= 0B001;
-//							} else {
-//								kbd_LED_status[0] &= 0B110;
-//							}
-//
-//							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
-//
-//							//		USB_Set_Keyboard_LED_Status();
-//						} else if (key == KEY_CAPS_LOCK) {
-//							if (((kbd_LED_status[0] >> 1) & 1) == 0) {
-//								kbd_LED_status[0] |= 0B010;
-//							} else {
-//								kbd_LED_status[0] &= 0B101;
-//							}
-//
-//							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
-//						} else if (key == KEY_SCROLL_LOCK) {
-//							if (((kbd_LED_status[0] >> 2) & 1) == 0) {
-//								kbd_LED_status[0] |= 0B100;
-//							} else {
-//								kbd_LED_status[0] &= 0B011;
-//							}
-//
-//							USBH_DbgLog("kbd_LED_status %d", kbd_LED_status[0]);
-//						}
-//					//} else {
-//						// keyboardMain(keybd_info1);
-//					//}
-//				}
-//
-//				USBH_DbgLog("KEYB %d", kinfo->keys[0]);
-//			}
-//		}
-//	}
-//}
 /* USER CODE END 1 */
 
 /**

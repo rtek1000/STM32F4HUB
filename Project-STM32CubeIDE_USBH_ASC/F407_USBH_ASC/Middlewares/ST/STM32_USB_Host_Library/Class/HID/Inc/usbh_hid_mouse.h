@@ -55,6 +55,8 @@ typedef struct _HID_MOUSE_Info
   uint8_t              x;
   uint8_t              y;
   uint8_t              buttons[3];
+  uint32_t 			   raw_data32[2];
+  uint8_t  			   raw_length;
 }
 HID_MOUSE_Info_TypeDef;
 

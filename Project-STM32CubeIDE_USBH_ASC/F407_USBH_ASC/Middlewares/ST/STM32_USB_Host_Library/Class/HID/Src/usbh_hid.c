@@ -42,6 +42,7 @@
 #include "usbh_core.h"
 #include "usbh_hid.h"
 #include "usbh_hid_parser.h"
+//#include "main.h"
 
 /** @addtogroup USBH_LIB
  * @{
