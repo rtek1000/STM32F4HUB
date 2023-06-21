@@ -1,11 +1,13 @@
 # STM32F4HUB
 
+- Note: Modified projects were migrated to this repository: [STM32F4HUB_modified](https://github.com/rtek1000/STM32F4HUB_modified)
+
+------
+
 - Support to all HID interfaces, more info: [STM32CubeIDE](https://github.com/rtek1000/STM32F4HUB_modified) Projects.
 - - To recognize the Mini Keyboard with built-in touchpad
 - - - This project can serve as a basis for other devices with multiple interfaces
 - - - - To do: Update HID project from ASC project (it stopped recognizing the multimedia keyboard)
--
-- Note: Modified projects were migrated to this repository: [STM32F4HUB_modified](https://github.com/rtek1000/STM32F4HUB_modified)
 -
 - Date: Jun, 20, 2023
 - - Modification:
