@@ -5,6 +5,8 @@
 - - - This project can serve as a basis for other devices with multiple interfaces
 - - - - To do: Update HID project from ASC project (it stopped recognizing the multimedia keyboard)
 -
+- Note: Modified projects were migrated to this repository: [STM32F4HUB_modified](https://github.com/rtek1000/STM32F4HUB_modified)
+-
 - Date: Jun, 20, 2023
 - - Modification:
 - - - Adaptation of [Project-STM32CubeIDE_USBH_HID](https://github.com/rtek1000/STM32F4HUB_modified/tree/main/Project-STM32CubeIDE_USBH_HID)
@@ -20,10 +22,6 @@
 - - - - HUB class not implemented
 - - - - Folder: [Project-STM32CubeIDE_USBH_ASC](https://github.com/rtek1000/STM32F4HUB_modified/tree/main/Project-STM32CubeIDE_USBH_ASC)
 - - By: RTEK1000
-
-----
-
-Note: Modified projects were migrated to this repository: [STM32F4HUB_modified](https://github.com/rtek1000/STM32F4HUB_modified)
 
 -----
 
